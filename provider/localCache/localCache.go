@@ -2,7 +2,9 @@ package localCache
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"local-cache/models"
 	"local-cache/provider"
 	"time"
@@ -32,7 +34,11 @@ func (lc CacheStruct) Set(data models.KeyValueStruct) error {
 	tempTimeData := map[string]interface{}{
 		data.Key: timeData,
 	}
-	LocalCachedData.LocalCacheData = tempData
+	metaData, err := json.Marshal(tempData)
+	if err != nil {
+		logrus.Errorf("%v", err)
+	}
+	LocalCachedData.LocalCacheData = metaData
 	LocalCachedData.ExpiryTime = tempTimeData
 
 	go func() {
@@ -48,12 +54,30 @@ func (lc CacheStruct) Set(data models.KeyValueStruct) error {
 }
 
 func (lc CacheStruct) Get(key string) interface{} {
-	return LocalCachedData.LocalCacheData[key]
+	tempData := make(map[string]interface{})
+	err := json.Unmarshal(LocalCachedData.LocalCacheData, &tempData)
+	if err != nil {
+		fmt.Println("unable to unmarshal data")
+		return err
+	}
+	return tempData[key]
 }
 
 func (lc CacheStruct) DeleteKeyValue(key string) error {
-	LocalCachedData.LocalCacheData[key] = nil
-	time.Sleep(time.Second * 1)
+	tempData := make(map[string]interface{})
+	err := json.Unmarshal(LocalCachedData.LocalCacheData, &tempData)
+	if err != nil {
+		fmt.Println("unable to unmarshal data")
+		return err
+	}
+
+	tempData[key] = nil
+
+	metaData, err := json.Marshal(tempData)
+	if err != nil {
+		logrus.Errorf("%v", err)
+	}
+	LocalCachedData.LocalCacheData = metaData
 	return nil
 }
 
