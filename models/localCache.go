@@ -3,7 +3,7 @@ package models
 import "time"
 
 type LocalCacheStruct struct {
-	LocalCacheData map[string]interface{}
+	LocalCacheData []byte
 	ExpiryTime     map[string]interface{}
 }
 
@@ -14,6 +14,6 @@ type ExpiryTime struct {
 
 type KeyValueStruct struct {
 	Key         string
-	Value       string
+	Value       interface{}
 	TimeSeconds int
 }
